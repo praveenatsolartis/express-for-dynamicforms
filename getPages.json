@@ -1,0 +1,7 @@
+{
+    "noOfPages":2,
+    "pages":[
+        {"url":"http://localhost:5000//getPages/getInsuredPage"}
+        ,{"url":"http://localhost:5000//getPages/getAddnInsured"}
+    ]
+}
