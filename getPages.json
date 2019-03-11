@@ -1,7 +1,17 @@
 {
     "noOfPages":2,
     "pages":[
-        {"url":"http://localhost:5000//getPages/getInsuredPage"}
-        ,{"url":"http://localhost:5000//getPages/getAddnInsured"}
+        {   "id":1,
+            "url":"getPages/getInsuredPage"
+        }
+        ,{  "id":2,
+            "url":"getPages/getAddnInformation"
+        },{
+            "id":3,
+            "url":"getPages/getAddnInsured"
+        },{
+            "id":4,
+            "url":"getPages/getAddnQuestions"
+        }
     ]
 }
