@@ -123,7 +123,7 @@
 			{
 				"SubApplicationName": "AdditionalInformation",
 				"ComponentType": "Text_ReadOnly",
-				"DefaultValue": "",
+				"DefaultValue": "praveenkumar_s@solartis.com",
 				"IsRequired": "N",
 				"Order": 300,
 				"ComponentLabel": "Email",
