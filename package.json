@@ -9,7 +9,9 @@
   "author": "praveen",
   "license": "MIT",
   "dependencies": {
+    "axios": "^0.18.0",
     "body-parser": "^1.18.3",
-    "express": "^4.16.4"
+    "express": "^4.16.4",
+    "nodeasync": "0.0.5"
   }
 }
