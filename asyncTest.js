@@ -4,28 +4,33 @@ const tree_api_request = require('./tree')
 
 
 const MethodOne = async ()=>{
-   await axios.get('http://localhost:5500/getPages').then(response=>console.log(response.data))
+ //  await axios.get('http://localhost:5500/getPages').then(response=>console.log(response.data))
    await MethodTwo().then((response)=>{
-       console.log(response.data)
+       console.log(response)
    }).catch(err=>console.log(err))
-   await axios.get('http://localhost:5500/getPages').then(response=>console.log(response.data))
+  // await axios.get('http://localhost:5500/getPages').then(response=>console.log(response.data))
 }
 
 const MethodTwo = ()=>{
-    return new Promise((resolve,reject)=>{
-        let data = {name:"solartis"}
+    return new Promise( async(resolve,reject)=>{
+        let data = "";
         if(1<2){
             resolve({
                 data
             })
         }else{
-            reject({name:"None"})
+            reject({data:"no_response"})
         }
     })
 }
 
+
+const invokeService = async ()=>{
+   await axios.post('https://ucicomruntimev6-2.solartis.net/KnowledgeEngineV6_2/KnowledgeBase/FireEventV2',payload,config).then(response=>{
+    console.log(response.data)
+})
+}
 var payload = JSON.parse(JSON.stringify(tree_api_request))
-console.log(payload.ProductNumber)
 let config = {
     headers:{
         'Content-Type':'application/json',
@@ -35,8 +40,5 @@ let config = {
         'Environment':'15'
     }
 }
-axios.post('https://ucicomruntimev6-2.solartis.net/KnowledgeEngineV6_2/KnowledgeBase/FireEventV2',payload,config).then(response=>{
-    console.log(response.data)
-})
-
+invokeService()
 MethodOne()
