@@ -1,6 +1,6 @@
 const axios = require('axios')
 const tree_api_request = require('./tree')
-
+require('dotenv').config()
 
 var payload = JSON.parse(JSON.stringify(tree_api_request))
 let config = {
@@ -54,9 +54,8 @@ const asyncAwait = async ()=>{
     })
     console.timeEnd("meta data api response time")
     const data = axios.post('https://ucicomruntimev6-2.solartis.net/KnowledgeEngineV6_2/KnowledgeBase/FireEventV2',payload,config)
-    console.log(await data.data)
     
-   
 }
 
 asyncAwait()
+console.log(process.env)
