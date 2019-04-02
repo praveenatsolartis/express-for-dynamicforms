@@ -15,16 +15,6 @@ let config = {
     }
 }
 
-const asyncAwait = async ()=>{
-    await axios.post('https://ucicomruntimev6-2.solartis.net/KnowledgeEngineV6_2/KnowledgeBase/FireEventV2',payload,config).then(response=>{
-       const {data} = response.data
-       data.map((page)=>{
-           console.log(`PageName : ${page.name}`,page.navigationParams)
-       })
-    })    
-}
-
-
 let authConfig = {
     headers:{
         "Content-Type":"application/json"
@@ -69,15 +59,10 @@ const invokeMetaData = (token,payload,tree)=>{
         metaDataRequest.SubApplicationType = subApplicationType;
         metaDataRequest.SubApplicationNameList = []
         metaDataRequest.SubApplicationNameList.push({"SubApplicationName":subApplicationName})
-       // console.log(metaDataRequest)
         await axios.post('https://uciapplicationservice.solartis.net/ApplicationServiceV5/ApplicationService5/getMetaDataV2',metaDataRequest,metaDataHeader)
         .then(res=>console.log('MetaData ',res.data.ApplicationDetail.SubApplicationDetailList))
         .catch(err=>console.log(err))
     })
-    //payload.SubApplicationNameList.push({"SubApplicationName":"Insured"})
-    //console.log(payload)
- //   axios.post('https://uciapplicationservice.solartis.net/ApplicationServiceV5/ApplicationService5/getMetaDataV2',payload,metaDataHeader)
-   // .then(res=>console.log('MetaData ',res.data))
 }
 const invokeTree =  (token,payload)=>{
     let treeHeader = {
