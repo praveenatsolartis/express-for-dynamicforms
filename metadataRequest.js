@@ -2,9 +2,7 @@ module.exports={
     "ApplicationType": "PJI",
     "SubApplicationNumber": "1.0",
     "ObjectStatus": "",
-    "SubApplicationNameList": [
-      
-    ],
+    "SubApplicationNameList": [],
     "OwnerId": 41,
     "ApplicationObjectType": "",
     "SubApplicationVersion": "",

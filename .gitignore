@@ -1,2 +1,6 @@
 /node_modules
 .env
+aes-cross-eval.js
+password-encryptor.js
+passwordAes.js
+passwordCrypto.js
