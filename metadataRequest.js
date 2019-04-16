@@ -30,6 +30,16 @@ module.exports={
       "ServiceRequestVersion": "1.0"
     },
     "ApplicationSubNumber": "1.0",
-    "ObjectId": 315
+    "ObjectId": 315,
+    "TransactionPrimaryKey": {
+              "application": [{
+                  "key": "Object::Quote::EffectiveDate",
+                  "value": "2019-03-14"
+              },
+              {
+                  "key": "Object::Application::RateVersion",
+                  "value": ""
+              }]
+          }
   }
                               

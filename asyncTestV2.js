@@ -39,6 +39,7 @@ const invokeMetaData = (token,payload,tree)=>{
     }
     payload.ServiceRequestDetail.Token = token;
     tree.data.map(async page=>{
+        let pageName = page.name;
         let metaDataRequest = payload;
         let applicationType = page.navigationParams.applicationType;
         let applicationObjectName = page.navigationParams.applicationObjectName;
@@ -51,7 +52,7 @@ const invokeMetaData = (token,payload,tree)=>{
         metaDataRequest.SubApplicationNameList = []
         metaDataRequest.SubApplicationNameList.push({"SubApplicationName":subApplicationName})
         await axios.post('https://uciapplicationservice.solartis.net/ApplicationServiceV5/ApplicationService5/getMetaDataV2',metaDataRequest,metaDataHeader)
-        .then(res=>console.log('MetaData ',res.data.ApplicationDetail.SubApplicationDetailList))
+        .then(res=>{console.log(`Page name is ${pageName} and result is`+'%o',res.data.ApplicationDetail.SubApplicationDetailList[0].AttributeDetailList)})
         .catch(err=>console.log(err))
     })
 }
@@ -76,7 +77,6 @@ const authInvoke = async ()=>{
     await axios.post('https://ucicommonservice.solartis.net/CommonServiceV2_1/AuthenticationServiceV2/requestService',authPayload,authConfig).then(response=>{
         const token = response.data.Token;
         payload.ServiceRequestDetail.Token = token;
-        console.log(payload)
         invokeTree(token,payload)
     }).catch(err=>console.log(err))
 }
