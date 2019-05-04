@@ -1,0 +1,10 @@
+helm init --service-account default --history-max 15
+
+kubectl create clusterrolebinding add-on-cluster-admin --clusterrole=cluster-admin --serviceaccount=kube-system:default
+
+helm repo add logrocket-charts https://logrocket-charts.storage.googleapis.com
+helm repo update
+
+//this command will start creating and running pods necessary for logrocket
+helm upgrade --install --values values-solartis.yaml --wait --timeout=1800 logrocket logrocket-charts/logrocket
+

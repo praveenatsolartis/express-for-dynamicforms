@@ -54,3 +54,7 @@ axios.post(URL,payload,headers).then(res=>console.log(res.data))
  });
  */
 
+const obj = {
+    "data.data" : "praveen"
+}
+

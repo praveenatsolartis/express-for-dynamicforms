@@ -7,7 +7,7 @@ let metaDataRequest = require('./metadataRequest')
 const app = express();
 const  Axios = require('axios');
 const tree_payload = require('./tree')
-
+const sysConfig = require('./dbConnectionPool');
 let tree_request = tree_payload
 
 const allowCrossDomain = (req, res, next) =>{
@@ -17,14 +17,15 @@ const allowCrossDomain = (req, res, next) =>{
     next();
 }
 
-
 app.use(bodyParser.urlencoded({ extended: true }))
 app.use(bodyParser.json())
 app.use(allowCrossDomain);
 
 let authConfig = {
     headers:{
-        "Content-Type":"application/json"
+        "Content-Type":"application/json",
+        "MODE":"LIVE",
+        "Environment":"15"
     }
 }
 
@@ -50,7 +51,7 @@ let treeHeader = {
     }
 }
 
-let authURL = 'https://ucicommonservice.solartis.net/CommonServiceV2_1/AuthenticationServiceV2/requestService'
+let authURL = 'https://ucicommonservice.solartis.net/CommonServiceV3_1/AuthenticationServiceV3/requestService'
 let treeURL = 'https://ucicomruntimev6-2.solartis.net/KnowledgeEngineV6_2/KnowledgeBase/FireEventV2'
 
 app.get('/getPages/getInsuredPage',(req,res)=>{
@@ -102,21 +103,29 @@ const invokeTree = ()=>{
         .then(
            (authResponse)=>{
             const token = authResponse.data.Token;
+            console.log('token is %o',token)
             tree_request.ServiceRequestDetail.Token = token;
             treeHeader.headers.Token = token
+            
                 Axios.post(treeURL,tree_request,treeHeader).
                 then((treeResponse)=>{
                         resolve({
                             data:treeResponse.data
                         })
-                }).catch(err=>console.log(err))
+                }).catch(err=>{
+                    console.log(err)
+                    reject({err})
+                })
            }
         )
-        .catch(err=>reject({err}))
+        .catch(err=>{
+            console.log(err)
+            reject({err})
+        })
     })
 }
 
-let metaDataURL = 'https://uciapplicationservice.solartis.net/ApplicationServiceV5/ApplicationService5/getMetaDataV3'
+let metaDataURL = 'https://ucipmtapplicationservice.solartis.net/ApplicationServiceV5/ApplicationService5/getMetaDataV3'
 let metaDataHeader = {
     headers:{
         "Content-Type":"application/json",
@@ -127,7 +136,7 @@ let metaDataHeader = {
 }
 const invokeMetaData = (navigationParams)=>{
     let mDataRequest = metaDataRequest
-    console.log(mDataRequest)
+   // console.log(mDataRequest)
     let {applicationObjectName,applicationType,subApplicationType,subApplicationName} = navigationParams
 
     mDataRequest.ObjectName = applicationObjectName;
@@ -141,9 +150,78 @@ const invokeMetaData = (navigationParams)=>{
             resolve({
                 data:response.data
             })
-        }).catch(err=>{reject({err})})
+        }).catch(err=>{
+            console.log(err)
+            reject({err})})
     })
 }
+
+app.post('/api/getOwnerId', (req, res) => {
+    let body = req.body;
+    let domainName = body.domainName;
+    sysConfig.sysConfigPool.query(sysConfig.sqls.getSysConfigValue,[domainName,'Y'], function (error, results, fields) {
+      if (error) throw error;
+      if(results.length>0) {
+        let OwnerId = results[0].ATTRIBUTE_VALUE;
+        let Mode = results[0].MODE;
+        let Environment = results[0].ENVIRONMENT;
+        res.send({ OwnerId, Mode, Environment});
+      } else {
+        res.send({ error: 'No records found'});
+      }
+    });
+  });
+  
+  app.post('/api/login', (req, res) => {
+    let body = req.body;
+    console.log("Request to actual service : %o", body)
+    let url = 'https://ucicommonservice.solartis.net/CommonServiceV3_1/AuthenticationServiceV3/requestService'
+    let headers = {
+      headers:{
+        "Content-Type":"application/json",
+        "MODE":"LIVE",
+        "Environment":"15"
+      }
+    }
+    const axios = require('axios');
+    axios.post(url,body,headers).then(response=>{
+      console.log(response.data)
+      res.send(response.data)
+    })
+  
+  });
+  
+  app.get('/api/encrypt/:password', (req, res) => {
+    var request = require('request');
+    var password = req.params.password;
+    var headers = {
+        'content-type': 'multipart/form-data; boundary=----WebKitFormBoundaryjx3P0QlaBkH15oNY',
+        'accept': 'application/json, text/plain, */*'
+    };
+  
+    var dataString = '$------WebKitFormBoundaryjx3P0QlaBkH15oNY\r\nContent-Disposition: form-data; name="file"\r\n\r\nundefined\r\n------WebKitFormBoundaryjx3P0QlaBkH15oNY\r\nContent-Disposition: form-data; name="data"\r\n\r\n{"textToEncrypt":"'+ password +'","secretKey":"3FCCB01F507E8EB0","mode":"ECB","keySize":"128","dataFormat":"Base64"}\r\n------WebKitFormBoundaryjx3P0QlaBkH15oNY--\r\n';
+    
+    let url = 'https://www.devglan.com/online-tools/aes-encryption'
+    const axios = require('axios');
+    axios.post(url,dataString,headers).then(response=>{
+      console.log(response.data)
+      if (response.statusCode == 200) {
+        let resp=JSON.parse(body);
+        let tempResponse = { 
+          inputText: resp.textToEncrypt,
+          encryptedText: resp.output
+        };
+        console.log("["+new Date().getTime()+":"+req.connection.remoteAddress+"] Message:: "+JSON.stringify(tempResponse));
+        res.send(tempResponse);
+      } else {
+        res.send({
+          error: 500
+        })
+      }
+    })  
+  });
+
+
 
 
 app.listen(5500, () => {
