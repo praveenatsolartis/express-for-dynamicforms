@@ -15,7 +15,7 @@ module.exports={
     "Teritory": "",
     "ApplicationNumber": "1.0",
     "ObjectVerId": 325,
-    "IsDataNeeded": "N",
+    "IsDataNeeded": "Y",
     "ApplicationSubType": "",
     "ObjectName": "PRODUCT",
     "Zone": "",

@@ -222,7 +222,97 @@ app.post('/api/getOwnerId', (req, res) => {
   });
 
 
+  
+app.post('/getTreeV1',async (req,response) => {
+  await invokeTreeV1(req.body)
+  .then((res) => {
+      response.json(res.data)
+  })
+})
 
+const invokeTreeV1 = (uiParams) => {
+
+  return new Promise(async (resolve,reject) => {
+      tree_request.ServiceRequestDetail.Token = uiParams.Token;
+      tree_request.ServiceRequestDetail.OwnerId = uiParams.OwnerId;
+
+      tree_request.ProductNumber = uiParams.ProductNumber;
+      tree_request.ProductVerNumber = uiParams.ProductVerNumber;
+      tree_request.Lob = uiParams.Lob;
+      tree_request.State = uiParams.State;
+      tree_request.ObjectType = uiParams.ObjectType;
+
+      treeHeader.headers.Token = uiParams.Token;
+
+      if(uiParams.OwnerId === '1'){
+          treeURL = 'https://ucipmtruntimev6-2.solartis.net/KnowledgeEngineV6_2/KnowledgeBase/FireEventV2';
+      }
+      if(uiParams.OwnerId === '41'){
+          treeURL = 'https://ucicomruntimev6-2.solartis.net/KnowledgeEngineV6_2/KnowledgeBase/FireEventV2';
+      }
+
+      await Axios.post(treeURL,tree_request,treeHeader)
+      .then((treeResponse) => {
+          console.log("tree response V1 \n ");
+          resolve({
+              data:treeResponse.data
+          })
+      }).catch(err => {
+          console.log(err)
+      })
+  })
+}
+
+
+app.post('/getMetaDataV1',async (req,response)=>{
+  await invokeMetaDataV1(req.body).then(res=>{
+      response.json(res.data)
+  })
+})
+
+const invokeMetaDataV1 = (navigationParams)=>{
+  let mDataRequest = metaDataRequest;
+ let uiParams = navigationParams.uiParams;
+
+ if(uiParams.TransactionKeys !== undefined){
+     console.log("inside construct transaction keys")
+          Object.keys(navigationParams.uiParams.TransactionKeys).map( (key) => {
+              mDataRequest.TransactionPrimaryKey.application.push(
+                  {
+                      "key" : key.replace('__','::').replace('__','::'),
+                      "value" : navigationParams.uiParams.TransactionKeys[key]
+                  }
+              )
+          }
+      )
+ }
+
+  mDataRequest.OwnerId = uiParams.OwnerId;
+  mDataRequest.State = uiParams.State;
+  mDataRequest.ObjectId = uiParams.ProductNumber;
+  mDataRequest.ObjectVerId = uiParams.ProductVerNumber;
+  mDataRequest.ServiceRequestDetail.OwnerId = uiParams.OwnerId;
+  mDataRequest.ServiceRequestDetail.Token = uiParams.Token;
+  mDataRequest.WorkflowType = uiParams.WorkflowType;
+
+  let {applicationObjectName,applicationType,subApplicationType,subApplicationName} = navigationParams;
+
+  mDataRequest.ObjectName = applicationObjectName;
+  mDataRequest.ApplicationType = applicationType;
+  mDataRequest.SubApplicationType = subApplicationType;
+  mDataRequest.SubApplicationNameList = [];
+  mDataRequest.SubApplicationNameList.push({"SubApplicationName":subApplicationName});
+
+  return new Promise(async (resolve,reject)=>{
+      await Axios.post(metaDataURL,mDataRequest,metaDataHeader).then((response)=>{
+          resolve({
+              data:response.data
+          })
+      }).catch(err=>{
+          console.log(err)
+          reject({err})})
+  })
+}
 
 app.listen(5500, () => {
     console.log("Server is listening on port 5500");
