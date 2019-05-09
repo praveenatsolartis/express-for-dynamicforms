@@ -9,6 +9,7 @@ const  Axios = require('axios');
 const tree_payload = require('./tree')
 const sysConfig = require('./dbConnectionPool');
 let tree_request = tree_payload
+let tree_response = require('./treeResponse')
 
 const allowCrossDomain = (req, res, next) =>{
     res.header('Access-Control-Allow-Origin', '*');
@@ -73,6 +74,12 @@ app.get('/getPages/getAddnInsured', (req, res) => {
 
 app.get('/getPages/getAddnQuestions', (req, res) => {
     fs.readFile(path.join(__dirname,'ApplicationQuestions.json'),'utf-8',(err,content)=>{
+        res.json(JSON.parse(content));
+     })
+});
+
+app.get('/getTreeResponse', (req, res) => {
+    fs.readFile(path.join(__dirname,'treeResponse.json'),'utf-8',(err,content)=>{
         res.json(JSON.parse(content));
      })
 });
@@ -191,34 +198,90 @@ app.post('/api/getOwnerId', (req, res) => {
   
   });
   
-  app.get('/api/encrypt/:password', (req, res) => {
+  app.get('/api/encrypt/:password/:aesKey', (req, res) => {
     var request = require('request');
     var password = req.params.password;
-    var headers = {
-        'content-type': 'multipart/form-data; boundary=----WebKitFormBoundaryjx3P0QlaBkH15oNY',
-        'accept': 'application/json, text/plain, */*'
-    };
+    var aesKey = req.params.aesKey;
+    if(aesKey === "0") {
+      aesKey = "3FCCB01F507E8EB0";
+    }
+
+    const fetch = require("node-fetch");
+	
+    fetch("https://www.devglan.com/online-tools/aes-encryption", 
+      {
+        "credentials":"include",
+        "headers":{"accept":"application/json, text/plain, */*","accept-language":"en-US,en;q=0.9,ta;q=0.8","content-type":"multipart/form-data; boundary=----WebKitFormBoundaryi7TRHmmgtQVs8Wgh"},
+        "referrer":"https://www.devglan.com/online-tools/aes-encryption-decryption",
+        "referrerPolicy":"no-referrer-when-downgrade",
+        "body":"------WebKitFormBoundaryi7TRHmmgtQVs8Wgh\r\nContent-Disposition: form-data; name=\"file\"\r\n\r\nundefined\r\n------WebKitFormBoundaryi7TRHmmgtQVs8Wgh\r\nContent-Disposition: form-data; name=\"data\"\r\n\r\n{\"textToEncrypt\":\""+ password +"\",\"secretKey\":\""+ aesKey +"\",\"mode\":\"ECB\",\"keySize\":\"128\",\"dataFormat\":\"Base64\"}\r\n------WebKitFormBoundaryi7TRHmmgtQVs8Wgh--\r\n","method":"POST","mode":"cors"})
+    .then(res => res.json())
+    .then(resp => {
+      console.log("Bruno : %o",resp);
+      let tempResponse = { 
+        inputText: resp.textToEncrypt,
+        encryptedText: resp.output,
+        encodedText: encodeURIComponent(resp.output)
+        
+      };
+      console.log("["+new Date().getTime()+":"+req.connection.remoteAddress+"] Message:: "+JSON.stringify(tempResponse));
+      res.send(tempResponse);
+    });
+  });
+
+  app.get('/api/decrypt/:text/:aesKey', (req, res) => {
+    var text = req.params.text;
+    var aesKey = req.params.aesKey;
+    if(aesKey === "0") {
+      aesKey = "3FCCB01F507E8EB0";
+    }
+
+    const fetch = require("node-fetch");
+	
+    fetch("https://www.devglan.com/online-tools/aes-decryption", 
+      {"credentials":"include","headers":{"accept":"application/json, text/plain, */*","accept-language":"en-US,en;q=0.9,ta;q=0.8","content-type":"application/json;charset=UTF-8"},"referrer":"https://www.devglan.com/online-tools/aes-encryption-decryption","referrerPolicy":"no-referrer-when-downgrade",
+      "body":"{\"textToDecrypt\":\""+ text +"\",\"secretKey\":\""+ aesKey +"\",\"mode\":\"ECB\",\"keySize\":\"128\",\"dataFormat\":\"Base64\"}","method":"POST","mode":"cors"}
+    ).then(res => res.json())
+    .then(resp => {
+      console.log("Bruno : %o",resp);
+      let decodedText = Buffer.from(resp.output, 'base64').toString();
+      let tempResponse = {
+        encryptedText: resp.output,
+        decodedText
+      };
+      console.log("["+new Date().getTime()+":"+req.connection.remoteAddress+"] Message:: "+JSON.stringify(tempResponse));
+      res.send(tempResponse);
+    });
+  });
+
+  app.post('/api/getPrivileges', (req, res) => {
+    let body = req.body;
+    let token = body.token;
+    let aesKey = body.aesKey;
+    if(aesKey === undefined || aesKey === "") {
+      aesKey = "3658C97G15D8B8G6";
+    }
   
-    var dataString = '$------WebKitFormBoundaryjx3P0QlaBkH15oNY\r\nContent-Disposition: form-data; name="file"\r\n\r\nundefined\r\n------WebKitFormBoundaryjx3P0QlaBkH15oNY\r\nContent-Disposition: form-data; name="data"\r\n\r\n{"textToEncrypt":"'+ password +'","secretKey":"3FCCB01F507E8EB0","mode":"ECB","keySize":"128","dataFormat":"Base64"}\r\n------WebKitFormBoundaryjx3P0QlaBkH15oNY--\r\n';
-    
-    let url = 'https://www.devglan.com/online-tools/aes-encryption'
-    const axios = require('axios');
-    axios.post(url,dataString,headers).then(response=>{
-      console.log(response.data)
-      if (response.statusCode == 200) {
-        let resp=JSON.parse(body);
-        let tempResponse = { 
-          inputText: resp.textToEncrypt,
-          encryptedText: resp.output
-        };
-        console.log("["+new Date().getTime()+":"+req.connection.remoteAddress+"] Message:: "+JSON.stringify(tempResponse));
-        res.send(tempResponse);
-      } else {
-        res.send({
-          error: 500
-        })
-      }
-    })  
+    const fetch = require("node-fetch");
+	
+    fetch("https://www.devglan.com/online-tools/aes-decryption", 
+      {"credentials":"include","headers":{"accept":"application/json, text/plain, */*","accept-language":"en-US,en;q=0.9,ta;q=0.8","content-type":"application/json;charset=UTF-8"},"referrer":"https://www.devglan.com/online-tools/aes-encryption-decryption","referrerPolicy":"no-referrer-when-downgrade",
+      "body":"{\"textToDecrypt\":\""+ token +"\",\"secretKey\":\""+ aesKey +"\",\"mode\":\"ECB\",\"keySize\":\"128\",\"dataFormat\":\"Base64\"}","method":"POST","mode":"cors"}
+    ).then(res => res.json())
+    .then(resp => {
+      let decodedText = Buffer.from(resp.output, 'base64').toString();
+      let detailList = decodedText.split("[").join("").split("]");
+      let privlegeString = decodedText.substring(decodedText.indexOf("{"),decodedText.length-1);
+      let privilegeList = privlegeString.split("{").join("").split("}");
+      let tempResponse = {
+        ownerId: detailList[0],
+        userName: detailList[2],
+        createdDate: detailList[4],
+        expiryDate: detailList[5],
+        privilegeList
+      };
+      res.send(tempResponse);
+    });
   });
 
 
@@ -250,7 +313,6 @@ const invokeTreeV1 = (uiParams) => {
       if(uiParams.OwnerId === '41'){
           treeURL = 'https://ucicomruntimev6-2.solartis.net/KnowledgeEngineV6_2/KnowledgeBase/FireEventV2';
       }
-
       await Axios.post(treeURL,tree_request,treeHeader)
       .then((treeResponse) => {
           console.log("tree response V1 \n ");
@@ -303,6 +365,7 @@ const invokeMetaDataV1 = (navigationParams)=>{
   mDataRequest.SubApplicationNameList = [];
   mDataRequest.SubApplicationNameList.push({"SubApplicationName":subApplicationName});
 
+
   return new Promise(async (resolve,reject)=>{
       await Axios.post(metaDataURL,mDataRequest,metaDataHeader).then((response)=>{
           resolve({
@@ -313,6 +376,39 @@ const invokeMetaDataV1 = (navigationParams)=>{
           reject({err})})
   })
 }
+
+app.post('/api/getProductDetails', (req, res) => {
+  let body = req.body;
+  let lob = body.lob;
+  let date = body.date;
+  let ownerId = body.ownerId;
+
+  if(date===""||date === undefined) {
+    let date1 = new Date();
+    date = date1.toISOString().slice(0,10);
+  }
+  console.log(lob, date, ownerId);
+
+  if(lob===""||lob===undefined) {
+    res.send({ error: "LOB attribute is missing"});
+  } else {
+    sysConfig.productConfigPool.query(sysConfig.sqls.getProductAndVersionDetails,[lob,ownerId,ownerId,date,date,"Y","Y"], function (error, results, fields) {
+      if (error) throw error;
+      if(results.length>0) {
+        res.send({
+          productId: results[0].PRD_PRODUCT_ID,
+          productVerId: results[0].PRD_PRODUCT_VER_ID,
+          productName: results[0].PRODUCT_NAME,
+          productNumber: results[0].PRD_PRODUCT_NUMBER,
+          productVerNumber: results[0].PRD_PRODUCT_VER_NUMBER
+        });
+      } else {
+        res.send({ error: 'No records found'});
+      }
+    });
+  } 
+});
+
 
 app.listen(5500, () => {
     console.log("Server is listening on port 5500");
