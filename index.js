@@ -301,6 +301,7 @@ const invokeTreeV1 = (uiParams) => {
 
       tree_request.ProductNumber = uiParams.ProductNumber;
       tree_request.ProductVerNumber = uiParams.ProductVerNumber;
+      tree_request.ProductName = uiParams.ProductName;
       tree_request.Lob = uiParams.Lob;
       tree_request.State = uiParams.State;
       tree_request.ObjectType = uiParams.ObjectType;
