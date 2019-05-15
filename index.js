@@ -2,14 +2,25 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const fs = require('fs')
 const path = require('path');
-const metadata = require('./metadata/metadata')
+//const metadata = require('./metadata/metadata')
 let metaDataRequest = require('./metadataRequest')
 const app = express();
 const  Axios = require('axios');
 const tree_payload = require('./tree')
 const sysConfig = require('./dbConnectionPool');
 let tree_request = tree_payload
-let tree_response = require('./treeResponse')
+//let tree_response = require('./treeResponse')
+const SessionData = require('./models/SessionData')
+const mongoose = require('mongoose');
+const db = 'mongodb+srv://praveen:praveenkumar_s@reactcluster-4q0xb.mongodb.net/solartisSessionData?retryWrites=true'
+mongoose
+  .connect(db, { 
+    useNewUrlParser: true,
+    useCreateIndex: true
+  }) // Adding new mongo url parser
+  .then(() => console.log('MongoDB Connected...'))
+  .catch(err => console.log(err));
+
 
 const allowCrossDomain = (req, res, next) =>{
     res.header('Access-Control-Allow-Origin', '*');
@@ -293,8 +304,9 @@ app.post('/getTreeV1',async (req,response) => {
   })
 })
 
-const invokeTreeV1 = (uiParams) => {
 
+
+const invokeTreeV1 = (uiParams) => {
   return new Promise(async (resolve,reject) => {
       tree_request.ServiceRequestDetail.Token = uiParams.Token;
       tree_request.ServiceRequestDetail.OwnerId = uiParams.OwnerId;
@@ -305,7 +317,6 @@ const invokeTreeV1 = (uiParams) => {
       tree_request.Lob = uiParams.Lob;
       tree_request.State = uiParams.State;
       tree_request.ObjectType = uiParams.ObjectType;
-
       treeHeader.headers.Token = uiParams.Token;
 
       if(uiParams.OwnerId === '1'){
@@ -409,6 +420,29 @@ app.post('/api/getProductDetails', (req, res) => {
     });
   } 
 });
+
+app.post('/saveData', (req,res)=>{
+    let {session_id,collection,pageName} = req.body
+   // console.log(req.body)
+    SessionData.findOne({session_id}).then(document=>{
+        if(!document){
+            const sessionData = new SessionData({session_id})
+            sessionData.save(
+                (err,data)=>{
+                    SessionData.findOneAndUpdate({session_id:data.session_id},{$push:{pageData:{[pageName]:collection}}}).then((obj)=>{
+                        console.log(obj)
+                    })
+                    
+                }
+            )
+        }else{
+            SessionData.findOneAndUpdate({session_id:session_id},{$push:{pageData:{[pageName]:collection}}}).then(result=>{
+                console.log(result)
+            })
+        }
+    })
+    res.status(200).json({"apiName":"saveData"})
+})
 
 
 app.listen(5500, () => {
